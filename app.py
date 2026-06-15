@@ -57,7 +57,16 @@ try:
     st.sidebar.image("https://cdn-icons-png.flaticon.com/512/3135/3135810.png", width=100)
     st.sidebar.header("Portal Navigation")
     
-    view_mode = st.sidebar.radio("Go To View:", ["🏫 School Overview", "🔍 Student Search & Report Cards"])
+    # ADDED: "🏆 Top Performers" and "👨‍🏫 Teacher Analytics" to the radio selection array as requested
+    view_mode = st.sidebar.radio(
+        "Go To View:", 
+        [
+            "🏫 School Overview", 
+            "🔍 Student Search & Report Cards", 
+            "🏆 Top Performers", 
+            "👨‍🏫 Teacher Analytics"
+        ]
+    )
     
     st.sidebar.markdown("---")
     st.sidebar.subheader("Global Filters")
@@ -167,6 +176,76 @@ try:
                 )
                 fig_student.update_traces(textposition='outside')
                 st.plotly_chart(fig_student, use_container_width=True)
+
+    # ==========================================
+    # VIEW 3: TOP PERFORMERS (NEW PAGE)
+    # ==========================================
+    elif view_mode == "🏆 Top Performers":
+        st.subheader("🏆 Elite Academic Top 10 Performers")
+        
+        # Sort values cleanly based on your class filter dynamic configuration choice
+        top10_df = df_filtered.sort_values(by="percentage_pct", ascending=False).head(10)
+        
+        if top10_df.empty:
+            st.warning("No performance data available to sort rosters.")
+        else:
+            # Highlight leaderboard layout chart matching your aesthetic style blocks
+            fig_top = px.bar(
+                top10_df,
+                x="name", y="percentage_pct",
+                color="percentage_pct",
+                text="percentage_pct",
+                labels={'name': 'Student Name', 'percentage_pct': 'Percentage (%)'},
+                color_continuous_scale="Viridis",
+                template="plotly_white"
+            )
+            fig_top.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+            st.plotly_chart(fig_top, use_container_width=True)
+            
+            st.markdown("### 🥇 Merit Standing Directory")
+            st.dataframe(
+                top10_df[['id', 'name', 'class', 'gender', 'total_marks', 'percentage_pct']], 
+                use_container_width=True, 
+                hide_index=True
+            )
+
+    # ==========================================
+    # VIEW 4: TEACHER ANALYTICS (NEW PAGE)
+    # ==========================================
+    elif view_mode == "👨‍🏫 Teacher Analytics":
+        st.subheader("👨‍🏫 Teacher Assignment & Performance Breakdown")
+        
+        st.markdown("### 🗺️ Faculty Core Registries")
+        st.dataframe(df_subjects, use_container_width=True, hide_index=True)
+        st.markdown("---")
+        
+        if df_filtered.empty:
+            st.warning("No records present to formulate performance tracking averages.")
+        else:
+            st.markdown(f"### 📈 Subject Class Averages Comparison Graph")
+            
+            # Formulating dynamic tracking blocks directly connected to your active filter scopes
+            class_averages = pd.DataFrame({
+                "Subject": ["Mathematics", "Chemistry", "Physics", "Hindi", "English"],
+                "Average Score": [
+                    df_filtered['maths'].mean(),
+                    df_filtered['chemistry'].mean(),
+                    df_filtered['physics'].mean(),
+                    df_filtered['hindi'].mean(),
+                    df_filtered['english'].mean()
+                ]
+            })
+            
+            fig_teacher = px.bar(
+                class_averages,
+                x="Subject", y="Average Score",
+                color="Average Score",
+                text="Average Score",
+                color_continuous_scale="Cividis",
+                template="plotly_white"
+            )
+            fig_teacher.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+            st.plotly_chart(fig_teacher, use_container_width=True)
 
 except Exception as e:
     st.error(f"🚨 Critical Failure Connecting to Dashboard Components: {e}")
